@@ -56,8 +56,6 @@ import com.oracle.graal.python.builtins.objects.traceback.LazyTraceback;
 import com.oracle.graal.python.nodes.BuiltinNames;
 import com.oracle.graal.python.nodes.bytecode.BytecodeFrameInfo;
 import com.oracle.graal.python.nodes.bytecode.FrameInfo;
-import com.oracle.graal.python.nodes.bytecode_dsl.BytecodeDSLFrameInfo;
-import com.oracle.graal.python.nodes.bytecode_dsl.PBytecodeDSLRootNode;
 import com.oracle.graal.python.nodes.call.CallNode;
 import com.oracle.graal.python.nodes.exception.TopLevelExceptionHandler;
 import com.oracle.graal.python.nodes.function.BuiltinFunctionRootNode;
@@ -116,7 +114,7 @@ public final class ExceptionUtils {
                 }
 
                 if (bytecodeNode != null) {
-                    return bytecodeNode.getBytecodeLocation(frame, location).findSourceLocation().getStartLine();
+                    return bytecodeNode.getBytecodeLocation(frame, location).getSourceLocation().getStartLine();
                 }
             } else {
                 return ((BytecodeFrameInfo) frameInfo).getLine(frame);
