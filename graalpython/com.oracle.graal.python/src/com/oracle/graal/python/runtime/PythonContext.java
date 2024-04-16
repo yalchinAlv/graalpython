@@ -1715,7 +1715,7 @@ public final class PythonContext extends Python3Core {
                 writeWarning("Native Posix backend selected, but it was excluded from the runtime, " +
                                 "switching to Java backend.");
             }
-            result = new EmulatedPosixSupport(this);
+            result = new NFIWinAPISupport(new NFIPosixSupport(this, option), new EmulatedPosixSupport(this));
         } else if (eqNode.execute(T_NATIVE, option, TS_ENCODING) || eqNode.execute(T_LLVM_LANGUAGE, option, TS_ENCODING)) {
             if (ImageInfo.inImageBuildtimeCode()) {
                 EmulatedPosixSupport emulatedPosixSupport = new EmulatedPosixSupport(this);

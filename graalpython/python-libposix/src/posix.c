@@ -83,6 +83,11 @@
 #include <pty.h>
 #endif
 
+#ifdef _WIN32
+#  include <windows.h>
+#  include "Python.h"
+#endif
+
 
 int64_t call_getpid() {
     return getpid();
@@ -379,9 +384,67 @@ int32_t call_getcwd(char *buf, uint64_t size) {
     return getcwd(buf, size) == NULL ? -1 : 0;
 }
 
+#ifdef _WIN32
+int32_t win32_wchdir(const wchar_t *path) {
+    wchar_t path_buf[MAX_PATH], *new_path = path_buf;
+    int result;
+    wchar_t env[4] = L"=x:";
+
+    if(!SetCurrentDirectoryW(path))
+        return FALSE;
+    result = GetCurrentDirectoryW(Py_ARRAY_LENGTH(path_buf), new_path);
+    if (!result)
+        return FALSE;
+    if (result > Py_ARRAY_LENGTH(path_buf)) {
+        new_path = PyMem_RawMalloc(result * sizeof(wchar_t));
+        if (!new_path) {
+            SetLastError(ERROR_OUTOFMEMORY);
+            return FALSE;
+        }
+        result = GetCurrentDirectoryW(result, new_path);
+        if (!result) {
+            PyMem_RawFree(new_path);
+            return FALSE;
+        }
+    }
+    int is_unc_like_path = (wcsncmp(new_path, L"\\\\", 2) == 0 ||
+                            wcsncmp(new_path, L"//", 2) == 0);
+    if (!is_unc_like_path) {
+        env[1] = new_path[0];
+        result = SetEnvironmentVariableW(env, new_path);
+    }
+    if (new_path != path_buf)
+        PyMem_RawFree(new_path);
+    return result ? TRUE : FALSE;
+}
+
+int32_t call_chdir(const char *path) {
+    int length = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
+    if (length <= 0)
+        return FALSE;
+
+    const wchar_t *wpath = PyMem_RawMalloc(length * sizeof(wchar_t));
+    if (!wpath) {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+
+    int converted_length = MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, length);
+    if (converted_length != length) {
+        PyMem_RawFree(wpath);
+        return FALSE;
+    }
+
+    int result = !win32_wchdir(wpath);
+    
+    PyMem_RawFree(wpath);
+    return result;
+}
+#else
 int32_t call_chdir(const char *path) {
     return chdir(path);
 }
+#endif
 
 int32_t call_fchdir(int32_t fd) {
     return fchdir(fd);
