@@ -836,13 +836,13 @@ suite = {
             "deliverable": "posix",
             "buildDependencies": [],
             "cflags": [
-                "-DNDEBUG", "-g", "-O3", "-Wall", "-Werror",
+                "-DNDEBUG", "/Z7", "/O2", "-Wall", "/WX",
             ],
             "os_arch": {
                 "windows": {
                     "<others>": {
                         # "/Z7", "/O2", "/WX", # cflags to replace -g -O3 -Werror
-                        "defaultBuild": False,
+                        "defaultBuild": True,
                     },
                 },
                 "darwin": {
@@ -1006,6 +1006,7 @@ suite = {
                                 "dependency:com.oracle.graal.python.jni/*",
                                 "dependency:com.oracle.graal.python.cext/bin/*",
                                 "dependency:com.oracle.graal.python.hpy.llvm/bin/*",
+                                "dependency:python-libposix/*",
                             ]
                         },
                     },
